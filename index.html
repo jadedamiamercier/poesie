@@ -1,0 +1,86 @@
+float gapWidth = 50;
+ArrayList<Letter> letters;
+
+void setup() {
+  fullScreen();
+  background(255);
+  letters = new ArrayList<Letter>();
+}
+
+void draw() {
+  background(255);
+  for (int i = letters.size() - 1; i >= 0; i--) {
+    Letter letter = letters.get(i);
+    letter.update();
+    letter.display();
+    if (letter.isOffScreen()) {
+      letters.remove(i);
+    }
+  }
+}
+
+void touchMoved() {
+  float touchX = touches[0].x;
+  float touchY = touches[0].y;
+  float pressure = touches[0].pressure; // Utilisation de la pression réelle sur l'écran
+  
+  gapWidth = map(pressure, 0, 1, 20, 150); // Ajuster le fossé en fonction de la pression du doigt
+  
+  // Générer des lettres de chaque côté du chemin du doigt
+  generateLetters(touchX - gapWidth / 2, touchY, pressure);
+  generateLetters(touchX + gapWidth / 2, touchY, pressure);
+}
+
+void generateLetters(float x, float y, float pressure) {
+  int density = 8; // Plus de lettres pour une densité accrue
+  for (int i = 0; i < density; i++) {
+    char randomChar = char(int(random(65, 90))); // Lettre aléatoire (A-Z)
+    float baseSpeed = map(pressure, 0, 1, 0.2, 5); // Plus de variations de vitesse
+    float speed;
+    
+    // Certaines lettres auront une vitesse très lente pour créer une traînée
+    if (random(1) < 0.3) {
+      speed = random(0.1, 0.5); // Lettres lentes pour créer une traînée
+    } else {
+      speed = baseSpeed;
+    }
+
+    float directionX = random(-0.8, 0.8); // Plus de diversité dans les mouvements
+    float directionY = random(-0.8, 0.8);
+    letters.add(new Letter(randomChar, x, y, directionX, directionY, speed));
+  }
+}
+
+class Letter {
+  char letter;
+  float x, y;
+  float dirX, dirY;
+  float speed;
+  float opacity;
+
+  Letter(char letter, float x, float y, float dirX, float dirY, float speed) {
+    this.letter = letter;
+    this.x = x;
+    this.y = y;
+    this.dirX = dirX;
+    this.dirY = dirY;
+    this.speed = speed;
+    this.opacity = 255;
+  }
+
+  void update() {
+    x += dirX * speed;
+    y += dirY * speed;
+    opacity -= 0.7; // S'estompe lentement pour un effet de traînée visible
+  }
+
+  void display() {
+    fill(0, opacity);
+    textSize(12);
+    text(letter, x, y);
+  }
+
+  boolean isOffScreen() {
+    return (x < 0 || x > width || y < 0 || y > height || opacity <= 0);
+  }
+}
